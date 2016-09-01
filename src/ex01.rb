@@ -55,3 +55,31 @@ class Store
   end
 end
 
+# 預かり所
+class Reception
+  # 必要オブジェクトをインスタンス化
+  def initialize
+    @store1 = Store.new
+    @store2 = Store.new
+    @store3 = Store.new
+    @store4 = Store.new
+    @stores = [@store1, @store2, @store3, @store4].freeze
+    @sorting_list = SortingList.new(@store1, @store2, @store3, @store4)
+  end
+
+  # 電話番号と[荷物]を伝えて、荷物を預ける
+  def check(phone_number, baggages)
+    baggages.each{ |baggage|
+      # 荷物の種類から適切な倉庫を選択
+      store = @sorting_list.select_store(baggage)
+      # 荷物を預ける
+      store.check(phone_number, baggage)
+    }
+  end
+
+  # [荷物]を受け取る
+  def take(phone_number)
+    # 各倉庫に問い合わせ、荷物を回収し、まとめる
+    @stores.map{ |store| store.take(phone_number) }.flatten
+  end
+end
