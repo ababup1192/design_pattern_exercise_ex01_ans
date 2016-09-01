@@ -91,18 +91,72 @@ class TestStore < Test::Unit::TestCase
   end
 end
 
-class TestStore < Test::Unit::TestCase
-  sub_test_case 'Reception' do
-    test '預けたものが返る' do
-      reception = Reception.new
-      baggages = [:key, :bag, :ball, :golf_club]
-      phone_number = 'xxx-xxxx-xxxx'
-      reception.check(phone_number, baggages)
+class TestLog < Test::Unit::TestCase
+  test 'ログが正しい文字列表記になっている' do
+    log = Log.new(:check, 'xxx-xxxx-xxxx',
+                    :key, Time.gm(2016, 9, 2, 0, 0, 0)
+                 )
+    expected = '(check): xxx-xxxx-xxxx, key, 2016-09-02 00:00:00 UTC'
+    actual = log.to_s
 
-      expected = baggages.sort
-      actual = reception.take(phone_number).sort
-
-      assert_equal expected, actual
-    end
+    assert_equal expected, actual
   end
 end
+
+class TestLogger < Test::Unit::TestCase
+  test '正しいログを取り込んでおり、正しい文字列表記になっている' do
+    logs = [
+      Log.new(:check, 'xxx-xxxx-xxxx',
+                :key, Time.gm(2016, 9, 2, 0, 0, 0)
+             ),
+      Log.new(:check, 'xxx-xxxx-xxxx',
+                :key, Time.gm(2016, 9, 2, 0, 0, 0)
+             ),
+      Log.new(:check, 'xxx-xxxx-xxxx',
+                :key, Time.gm(2016, 9, 2, 0, 0, 0)
+             )
+    ]
+    logger = Logger.new
+
+    logs.each{|log| logger << log }
+
+    expected = logs.map(&:to_s).join("\n")
+    actual = logger.show_logs
+
+    assert_equal expected, actual
+  end
+end
+
+class TestReception < Test::Unit::TestCase
+  test '預けたものが返る' do
+    reception = Reception.new
+    baggages = [:key, :bag, :ball, :golf_club]
+    phone_number = 'xxx-xxxx-xxxx'
+    reception.check(phone_number, baggages)
+
+    expected = baggages.sort
+    actual = reception.take(phone_number).sort
+
+    assert_equal expected, actual
+  end
+
+  test 'ログを正しく出力する' do
+    reception = Reception.new
+    baggages = [:key, :bag, :ball, :golf_club]
+    phone_number = 'xxx-xxxx-xxxx'
+    reception.check(phone_number, baggages, Time.gm(2016, 9, 2, 0, 0, 0))
+    reception.take(phone_number, Time.gm(2016, 9, 2, 0, 0, 0))
+
+    take_baggages = [:key, :bag, :golf_club, :ball]
+    expected = (baggages.map{ |baggage| 
+      Log.new(:check, phone_number, baggage, Time.gm(2016, 9, 2, 0, 0, 0))
+    } + take_baggages.map{ |baggage| 
+      Log.new(:take, phone_number, baggage, Time.gm(2016, 9, 2, 0, 0, 0))
+    }).map(&:to_s).join("\n")
+    actual = reception.show_logs
+
+    assert_equal expected, actual
+  end
+
+end
+

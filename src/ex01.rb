@@ -55,6 +55,36 @@ class Store
   end
 end
 
+class Log
+  def initialize(recep_type, phone_number, baggage, time=nil)
+    @recep_type = recep_type
+    @phone_number = phone_number
+    @baggage = baggage
+    @time = time || Time.now.gmtime
+  end
+
+  def to_s
+    "(#{@recep_type}): #{@phone_number}, #{@baggage}, #{@time}"
+  end
+end
+
+class Logger
+  attr_reader :logs
+  def initialize
+    @logs = []
+  end
+
+  # ログを追記
+  def <<(log)
+    @logs << log
+  end
+
+  # ログを改行区切りの文字列として返す。
+  def show_logs
+    @logs.map{|log| log.to_s }.join("\n")
+  end
+end
+
 # 預かり所
 class Reception
   # 必要オブジェクトをインスタンス化
@@ -65,21 +95,36 @@ class Reception
     @store4 = Store.new
     @stores = [@store1, @store2, @store3, @store4].freeze
     @sorting_list = SortingList.new(@store1, @store2, @store3, @store4)
+    @logger = Logger.new
   end
 
   # 電話番号と[荷物]を伝えて、荷物を預ける
-  def check(phone_number, baggages)
+  def check(phone_number, baggages, time=nil)
     baggages.each{ |baggage|
       # 荷物の種類から適切な倉庫を選択
       store = @sorting_list.select_store(baggage)
+      # ログを書き込む
+      @logger << Log.new(:check, phone_number, baggage, time)
       # 荷物を預ける
       store.check(phone_number, baggage)
     }
   end
 
   # [荷物]を受け取る
-  def take(phone_number)
+  def take(phone_number, time=nil)
     # 各倉庫に問い合わせ、荷物を回収し、まとめる
-    @stores.map{ |store| store.take(phone_number) }.flatten
+    baggages = @stores.map{ |store|
+      store.take(phone_number) 
+    }.flatten
+    # ログを書き込む
+    baggages.each{ |baggage|
+      @logger << Log.new(:take, phone_number, baggage, time)
+    }
+    baggages
+  end
+
+  # ログを改行区切りの文字列を返す
+  def show_logs
+    @logger.show_logs
   end
 end
