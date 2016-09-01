@@ -14,7 +14,7 @@ class SortingList
   end
 
   def select_store(baggage)
-    selected = @list.select{ 
+    selected = @list.select { 
       |store_baggages| store_baggages[1].include?(baggage)
     }[0]
     selected.nil? ? @store4 : selected[0]
@@ -44,15 +44,13 @@ class Reception
     @store2 = Store.new
     @store3 = Store.new
     @store4 = Store.new
-    @stores = [@store1, @store2, @store3, @store4]
+    @stores = [@store1, @store2, @store3, @store4].freeze
     @sorting_list = SortingList.new(@store1, @store2, @store3, @store4)
   end
 
-  def check(phone_number, baggages) 
-    baggages.map{ |baggage|
-      [@sorting_list.select_store(baggage), baggage]
-    }.each{ |store_baggage|
-      store, baggage = store_baggage
+  def check(phone_number, baggages)
+    baggages.each{ |baggage|
+      store = @sorting_list.select_store(baggage)
       store.check(phone_number, baggage)
     }
   end
