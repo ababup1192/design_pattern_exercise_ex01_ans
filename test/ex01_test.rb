@@ -91,8 +91,7 @@ class TestStore < Test::Unit::TestCase
   end
 end
 
-class TestStore < Test::Unit::TestCase
-  sub_test_case 'Reception' do
+class TestReception < Test::Unit::TestCase
     test '預けたものが返る' do
       reception = Reception.new
       baggages = [:key, :bag, :ball, :golf_club]
