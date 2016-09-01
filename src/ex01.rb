@@ -49,8 +49,9 @@ class Reception
   end
 
   def check(phone_number, baggages) 
-    stores = baggages.map{ |baggage| @sorting_list.select_store(baggage) }
-    stores.zip(baggages).each{ |store_baggage|
+    baggages.map{ |baggage|
+      [@sorting_list.select_store(baggage), baggage]
+    }.each{ |store_baggage|
       store, baggage = store_baggage
       store.check(phone_number, baggage)
     }
